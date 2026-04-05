@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OberFans</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --ink: #0d0d0d;
+    --surface: #f5f4f0;
+    --card: #ffffff;
+    --accent: #e8ff47;
+    --accent2: #0057ff;
+    --muted: #9b9b9b;
+    --border: #e4e3de;
+    --danger: #ff3b30;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+}
+
+/* ─── TYPOGRAPHY ─────────────────── */
+h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+
+/* ─── AUTH ───────────────────────── */
+#auth-overlay {
+    position: fixed; inset: 0;
+    background: var(--ink);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.auth-top {
+    background: var(--accent);
+    padding: 32px 36px 28px;
+}
+
+.auth-top .brand {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -1px;
+}
+
+.auth-top p {
+    font-size: 0.85rem;
+    color: var(--ink);
+    opacity: 0.6;
+    margin-top: 4px;
+}
+
+.auth-body { padding: 28px 36px 32px; }
+
+.auth-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--border);
+    border-radius: 30px;
+    padding: 4px;
+    margin-bottom: 24px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 26px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: all .2s;
+}
+
+.auth-tab.active {
+    background: var(--ink);
+    color: var(--accent);
+}
+
+.auth-field {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.auth-field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.auth-field input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    transition: border .2s;
+}
+
+.auth-field input:focus { border-color: var(--accent2); }
+
+.auth-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    color: var(--accent);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity .2s;
+}
+
+.auth-submit:hover { opacity: 0.85; }
+
+.auth-error {
+    background: #fff0f0;
+    border: 1px solid #ffd0d0;
+    color: var(--danger);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+    display: none;
+}
+
+/* ─── APP ────────────────────────── */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+
+/* Header */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 58px;
+}
+
+.header .brand {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    padding: 5px 12px 5px 6px;
+    border-radius: 30px;
+}
+
+.user-chip img {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+}
+
+.user-chip span {
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.btn-logout {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.6);
+    border-radius: 8px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all .2s;
+}
+
+.btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+/* Layout */
+.layout {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px 16px;
+    max-width: 1060px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Upload Panel */
+.upload-panel {
+    width: 340px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 78px;
+    height: fit-content;
+}
+
+.panel-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-body { padding: 20px; }
+
+/* Upload Drop Zone */
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+}
+
+.drop-zone.has-image { border-style: solid; border-color: var(--accent2); padding: 0; }
+.drop-zone:hover { border-color: var(--accent2); background: #f0f5ff; }
+
+.drop-zone input[type=file] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+.drop-zone-icon { font-size: 2rem; margin-bottom: 8px; }
+.drop-zone-text { font-size: 0.85rem; color: var(--muted); }
+.drop-zone-text strong { display: block; color: var(--ink); font-size: 0.9rem; margin-bottom: 4px; }
+
+#preview-img {
+    width: 100%; display: none; border-radius: 8px;
+    max-height: 220px; object-fit: cover;
+}
+
+.remove-img {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.6); color: #fff;
+    border: none; border-radius: 50%;
+    width: 28px; height: 28px;
+    cursor: pointer; font-size: 1rem;
+    display: none; align-items: center; justify-content: center;
+}
+
+.drop-zone.has-image .remove-img { display: flex; }
+
+textarea.caption-input {
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    resize: none;
+    height: 90px;
+    outline: none;
+    background: var(--surface);
+    transition: border .2s;
+}
+
+textarea.caption-input:focus { border-color: var(--accent2); }
+
+.btn-post {
+    width: 100%;
+    margin-top: 12px;
+    padding: 13px;
+    background: var(--ink);
+    color: var(--accent);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .2s;
+}
+
+.btn-post:hover { opacity: 0.85; }
+.btn-post:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Feed */
+.feed { flex: 1; min-width: 0; max-width: 580px; }
+
+.feed-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+}
+
+.feed-empty .icon { font-size: 3rem; margin-bottom: 12px; }
+.feed-empty h3 { font-family: 'Syne', sans-serif; color: var(--ink); margin-bottom: 6px; }
+
+/* Post Card */
+.post-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: fadeUp .3s ease;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.post-head {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+}
+
+.post-author {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.post-time {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 1px;
+}
+
+.post-image {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    display: block;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.post-body { padding: 14px 16px; }
+
+.post-caption {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    color: var(--ink);
+}
+
+.post-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.react-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 30px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.react-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.react-btn.active-like { background: #fff0f5; border-color: #ff6b8a; color: #ff3366; }
+.react-btn.active-dislike { background: #f0f4ff; border-color: #aab5ff; color: var(--accent2); }
+
+/* Comments */
+.comment-section { border-top: 1px solid var(--border); padding-top: 14px; }
+
+.comment-list {
+    list-style: none;
+    max-height: 160px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.comment-list li {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+    font-size: 0.85rem;
+}
+
+.comment-list li img {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+}
+
+.comment-bubble {
+    background: var(--surface);
+    border-radius: 0 12px 12px 12px;
+    padding: 7px 12px;
+    flex: 1;
+}
+
+.comment-bubble .cuser {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--accent2);
+    margin-bottom: 2px;
+}
+
+.comment-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.comment-input-row input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 2px solid var(--border);
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    background: var(--surface);
+    transition: border .2s;
+}
+
+.comment-input-row input:focus { border-color: var(--accent2); }
+
+.btn-send {
+    background: var(--ink);
+    color: var(--accent);
+    border: none;
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: transform .15s;
+}
+
+.btn-send:hover { transform: scale(1.1); }
+
+/* Spinner */
+.spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Loading skeleton */
+.skeleton-post {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+    padding: 16px;
+}
+
+.skeleton-line {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+    border-radius: 6px;
+    height: 14px;
+    margin-bottom: 10px;
+}
+
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.skeleton-avatar { width: 38px; height: 38px; border-radius: 50%; }
+.skeleton-img { width: 100%; height: 260px; border-radius: 10px; }
+
+/* Responsive */
+@media (max-width: 700px) {
+    .upload-panel { display: none; }
+    .feed { max-width: 100%; }
+
+    .mobile-fab {
+        display: flex !important;
+        position: fixed;
+        bottom: 20px; right: 20px;
+        z-index: 800;
+        background: var(--ink);
+        color: var(--accent);
+        width: 54px; height: 54px;
+        border-radius: 50%;
+        border: none;
+        font-size: 1.5rem;
+        align-items: center; justify-content: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        cursor: pointer;
+    }
+
+    .mobile-upload-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 700;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .mobile-upload-inner {
+        background: var(--card);
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+.mobile-fab { display: none; }
+.mobile-upload-sheet { display: none; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink);
+    color: var(--accent);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 9999;
+    transition: transform .3s ease;
+    pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ─── AUTH OVERLAY ─── -->
+<div id="auth-overlay">
+    <div class="auth-box">
+        <div class="auth-top">
+            <div class="brand">OBERFANS</div>
+            <p>Die Creator-Plattform für echte Fans.</p>
+        </div>
+        <div class="auth-body">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Einloggen</button>
+                <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrieren</button>
+            </div>
+
+            <div id="auth-error" class="auth-error"></div>
+
+            <!-- Login -->
+            <div id="form-login">
+                <div class="auth-field">
+                    <label>Benutzername</label>
+                    <input type="text" id="login-user" placeholder="dein_name">
+                </div>
+                <div class="auth-field">
+                    <label>Passwort</label>
+                    <input type="password" id="login-pass" placeholder="••••••">
+                </div>
+                <button class="auth-submit" onclick="doLogin()">Einloggen →</button>
+            </div>
+
+            <!-- Register -->
+            <div id="form-register" style="display:none">
+                <div class="auth-field">
+                    <label>Benutzername</label>
+                    <input type="text" id="reg-user" placeholder="dein_name">
+                </div>
+                <div class="auth-field">
+                    <label>Passwort <span style="opacity:.5">(min. 6 Zeichen)</span></label>
+                    <input type="password" id="reg-pass" placeholder="••••••">
+                </div>
+                <button class="auth-submit" onclick="doRegister()">Konto erstellen →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div id="app">
+    <!-- Header -->
+    <header class="header">
+        <div class="brand">OBERFANS</div>
+        <div class="header-right">
+            <div class="user-chip">
+                <img id="header-avatar" src="" alt="">
+                <span id="header-username"></span>
+            </div>
+            <button class="btn-logout" onclick="doLogout()">Abmelden</button>
+        </div>
+    </header>
+
+    <!-- Layout -->
+    <div class="layout">
+
+        <!-- Upload Panel (Desktop) -->
+        <aside class="upload-panel">
+            <div class="panel-card">
+                <div class="panel-header">✦ Neuer Post</div>
+                <div class="panel-body">
+                    <div class="drop-zone" id="drop-zone">
+                        <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(this)">
+                        <div id="drop-placeholder">
+                            <div class="drop-zone-icon">🖼️</div>
+                            <div class="drop-zone-text">
+                                <strong>Bild auswählen</strong>
+                                Klicken oder Datei hineinziehen
+                            </div>
+                        </div>
+                        <img id="preview-img" src="" alt="Vorschau">
+                        <button class="remove-img" onclick="removeImage(event)">✕</button>
+                    </div>
+                    <textarea class="caption-input" id="caption-input" placeholder="Erzähl deinen Fans etwas..."></textarea>
+                    <button class="btn-post" id="btn-post" onclick="submitPost()">
+                        <span>Posten</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Feed -->
+        <main class="feed" id="feed">
+            <!-- Posts werden hier gerendert -->
+        </main>
+    </div>
+</div>
+
+<!-- Mobile FAB -->
+<button class="mobile-fab" onclick="openMobileSheet()">＋</button>
+
+<!-- Mobile Upload Sheet -->
+<div class="mobile-upload-sheet" id="mobile-sheet" onclick="closeMobileSheet(event)">
+    <div class="mobile-upload-inner">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:16px;">✦ Neuer Post</div>
+        <div class="drop-zone" id="drop-zone-m">
+            <input type="file" id="file-input-m" accept="image/*" onchange="handleFileSelectMobile(this)">
+            <div id="drop-placeholder-m">
+                <div class="drop-zone-icon">🖼️</div>
+                <div class="drop-zone-text">
+                    <strong>Bild auswählen</strong>
+                </div>
+            </div>
+            <img id="preview-img-m" src="" alt="Vorschau" style="display:none;width:100%;border-radius:8px;max-height:200px;object-fit:cover;">
+            <button class="remove-img" onclick="removeImageMobile(event)">✕</button>
+        </div>
+        <textarea class="caption-input" id="caption-input-m" placeholder="Erzähl deinen Fans etwas..."></textarea>
+        <button class="btn-post" id="btn-post-m" onclick="submitPostMobile()">
+            <span>Posten</span>
+        </button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const API = 'http://localhost:3000/api';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let token    = localStorage.getItem('of_token');
+let username = localStorage.getItem('of_user');
+let avatar   = localStorage.getItem('of_avatar');
+let selectedFile = null;
+let selectedFileMobile = null;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+window.onload = () => {
+    if (token && username) showApp();
+};
+
+// ─── AUTH TABS ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+    document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    hideAuthError();
+}
+
+function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideAuthError() {
+    document.getElementById('auth-error').style.display = 'none';
+}
+
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+async function doRegister() {
+    const user = document.getElementById('reg-user').value.trim();
+    const pass = document.getElementById('reg-pass').value;
+    hideAuthError();
+
+    try {
+        const res = await fetch(`${API}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) return showAuthError(data.error);
+        showToast('✅ Konto erstellt! Jetzt einloggen.');
+        switchTab('login');
+        document.getElementById('login-user').value = user;
+    } catch {
+        showAuthError('Server nicht erreichbar. Läuft server.js?');
+    }
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    hideAuthError();
+
+    try {
+        const res = await fetch(`${API}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) return showAuthError(data.error);
+
+        token    = data.token;
+        username = data.username;
+        avatar   = data.avatar;
+        localStorage.setItem('of_token', token);
+        localStorage.setItem('of_user',  username);
+        localStorage.setItem('of_avatar', avatar);
+        showApp();
+    } catch {
+        showAuthError('Server nicht erreichbar. Läuft server.js?');
+    }
+}
+
+// ─── LOGOUT ──────────────────────────────────────────────────────────────────
+function doLogout() {
+    localStorage.removeItem('of_token');
+    localStorage.removeItem('of_user');
+    localStorage.removeItem('of_avatar');
+    location.reload();
+}
+
+// ─── SHOW APP ────────────────────────────────────────────────────────────────
+function showApp() {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('header-username').textContent = '@' + username;
+    document.getElementById('header-avatar').src = avatar;
+    loadFeed();
+}
+
+// ─── DRAG & DROP ─────────────────────────────────────────────────────────────
+['dragover', 'drop'].forEach(evt => {
+    document.addEventListener(evt, e => e.preventDefault());
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupDropZone('drop-zone', 'preview-img', 'drop-placeholder', false);
+    setupDropZone('drop-zone-m', 'preview-img-m', 'drop-placeholder-m', true);
+});
+
+function setupDropZone(zoneId, previewId, placeholderId, isMobile) {
+    const zone = document.getElementById(zoneId);
+    if (!zone) return;
+    zone.addEventListener('dragover', () => zone.style.borderColor = '#0057ff');
+    zone.addEventListener('dragleave', () => zone.style.borderColor = '');
+    zone.addEventListener('drop', e => {
+        e.stopPropagation();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            isMobile ? (selectedFileMobile = file) : (selectedFile = file);
+            showPreview(file, previewId, placeholderId, zoneId);
+        }
+    });
+}
+
+// ─── FILE SELECT ─────────────────────────────────────────────────────────────
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    selectedFile = file;
+    showPreview(file, 'preview-img', 'drop-placeholder', 'drop-zone');
+}
+
+function handleFileSelectMobile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    selectedFileMobile = file;
+    showPreview(file, 'preview-img-m', 'drop-placeholder-m', 'drop-zone-m');
+}
+
+function showPreview(file, previewId, placeholderId, zoneId) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById(previewId);
+        img.src = e.target.result;
+        img.style.display = 'block';
+        document.getElementById(placeholderId).style.display = 'none';
+        document.getElementById(zoneId).classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage(e) {
+    e.stopPropagation();
+    selectedFile = null;
+    resetDropZone('drop-zone', 'preview-img', 'drop-placeholder', 'file-input');
+}
+
+function removeImageMobile(e) {
+    e.stopPropagation();
+    selectedFileMobile = null;
+    resetDropZone('drop-zone-m', 'preview-img-m', 'drop-placeholder-m', 'file-input-m');
+}
+
+function resetDropZone(zoneId, previewId, placeholderId, inputId) {
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById(placeholderId).style.display = '';
+    document.getElementById(zoneId).classList.remove('has-image');
+    document.getElementById(zoneId).style.borderColor = '';
+    document.getElementById(inputId).value = '';
+}
+
+// ─── SUBMIT POST ─────────────────────────────────────────────────────────────
+async function submitPost() {
+    await _submitPost(selectedFile, 'caption-input', 'btn-post');
+    selectedFile = null;
+    resetDropZone('drop-zone', 'preview-img', 'drop-placeholder', 'file-input');
+}
+
+async function submitPostMobile() {
+    await _submitPost(selectedFileMobile, 'caption-input-m', 'btn-post-m');
+    selectedFileMobile = null;
+    resetDropZone('drop-zone-m', 'preview-img-m', 'drop-placeholder-m', 'file-input-m');
+    closeMobileSheet();
+}
+
+async function _submitPost(file, captionId, btnId) {
+    const caption = document.getElementById(captionId).value.trim();
+    if (!file && !caption) return showToast('⚠️ Bild oder Text erforderlich');
+
+    const btn = document.getElementById(btnId);
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    const fd = new FormData();
+    if (file) fd.append('image', file);
+    fd.append('caption', caption);
+
+    try {
+        const res = await fetch(`${API}/posts`, {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + token },
+            body: fd
+        });
+        if (!res.ok) throw new Error();
+        document.getElementById(captionId).value = '';
+        showToast('✅ Post veröffentlicht!');
+        loadFeed();
+    } catch {
+        showToast('❌ Fehler beim Posten');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Posten</span>';
+    }
+}
+
+// ─── LOAD FEED ───────────────────────────────────────────────────────────────
+async function loadFeed() {
+    const feed = document.getElementById('feed');
+    feed.innerHTML = renderSkeletons(2);
+
+    try {
+        const res = await fetch(`${API}/posts`, {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        if (res.status === 401) { doLogout(); return; }
+        const posts = await res.json();
+        feed.innerHTML = '';
+
+        if (!posts.length) {
+            feed.innerHTML = `
+                <div class="feed-empty">
+                    <div class="icon">📭</div>
+                    <h3>Noch keine Posts</h3>
+                    <p>Sei der Erste und teile etwas!</p>
+                </div>`;
+            return;
+        }
+
+        posts.forEach(p => feed.insertAdjacentHTML('beforeend', renderPost(p)));
+    } catch {
+        feed.innerHTML = `<div class="feed-empty"><div class="icon">⚠️</div><h3>Server nicht erreichbar</h3><p>Bitte <code>server.js</code> starten.</p></div>`;
+    }
+}
+
+function renderSkeletons(n) {
+    return Array.from({ length: n }, () => `
+        <div class="skeleton-post">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+                <div class="skeleton-line skeleton-avatar"></div>
+                <div style="flex:1"><div class="skeleton-line" style="width:40%;height:12px"></div></div>
+            </div>
+            <div class="skeleton-line skeleton-img"></div>
+        </div>`).join('');
+}
+
+function renderPost(p) {
+    const likedByMe    = p.likes.includes(username);
+    const dislikedByMe = p.dislikes.includes(username);
+    const time = new Date(p.createdAt).toLocaleDateString('de-DE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+
+    const comments = p.comments.map(c => `
+        <li>
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(c.user)}" alt="">
+            <div class="comment-bubble">
+                <div class="cuser">@${c.user}</div>
+                ${escHtml(c.text)}
+            </div>
+        </li>`).join('');
+
+    return `
+    <article class="post-card" data-id="${p.id}">
+        <div class="post-head">
+            <img class="post-avatar" src="${p.avatar}" alt="">
+            <div>
+                <div class="post-author">@${p.author}</div>
+                <div class="post-time">${time}</div>
+            </div>
+        </div>
+        ${p.imageUrl ? `<img class="post-image" src="${p.imageUrl}" alt="Post-Bild">` : ''}
+        <div class="post-body">
+            ${p.caption ? `<p class="post-caption">${escHtml(p.caption)}</p>` : ''}
+            <div class="post-actions">
+                <button class="react-btn ${likedByMe ? 'active-like' : ''}" onclick="react('${p.id}','like',this)">
+                    ❤️ <span id="lc-${p.id}">${p.likes.length}</span>
+                </button>
+                <button class="react-btn ${dislikedByMe ? 'active-dislike' : ''}" onclick="react('${p.id}','dislike',this)">
+                    👎 <span id="dc-${p.id}">${p.dislikes.length}</span>
+                </button>
+            </div>
+            <div class="comment-section">
+                <ul class="comment-list" id="cl-${p.id}">${comments}</ul>
+                <div class="comment-input-row">
+                    <input type="text" id="ci-${p.id}" placeholder="Kommentieren..."
+                           onkeydown="if(event.key==='Enter')postComment('${p.id}')">
+                    <button class="btn-send" onclick="postComment('${p.id}')">➤</button>
+                </div>
+            </div>
+        </div>
+    </article>`;
+}
+
+// ─── REACT ───────────────────────────────────────────────────────────────────
+async function react(postId, type, btn) {
+    const res = await fetch(`${API}/posts/${postId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:'Bearer '+token },
+        body: JSON.stringify({ type })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('lc-' + postId).textContent = data.likes;
+    document.getElementById('dc-' + postId).textContent = data.dislikes;
+
+    // Toggle classes auf beiden Buttons
+    const card = btn.closest('.post-card');
+    card.querySelectorAll('.react-btn').forEach(b => b.classList.remove('active-like','active-dislike'));
+    if (type === 'like')    btn.classList.toggle('active-like', data.likes > 0);
+    if (type === 'dislike') btn.classList.toggle('active-dislike', data.dislikes > 0);
+}
+
+// ─── COMMENT ─────────────────────────────────────────────────────────────────
+async function postComment(postId) {
+    const input = document.getElementById('ci-' + postId);
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const res = await fetch(`${API}/posts/${postId}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:'Bearer '+token },
+        body: JSON.stringify({ text })
+    });
+    if (!res.ok) return;
+    const comment = await res.json();
+
+    const list = document.getElementById('cl-' + postId);
+    const li = document.createElement('li');
+    li.innerHTML = `
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user)}" alt="">
+        <div class="comment-bubble">
+            <div class="cuser">@${comment.user}</div>
+            ${escHtml(comment.text)}
+        </div>`;
+    list.appendChild(li);
+    list.scrollTop = list.scrollHeight;
+}
+
+// ─── MOBILE SHEET ────────────────────────────────────────────────────────────
+function openMobileSheet() { document.getElementById('mobile-sheet').style.display = 'flex'; }
+function closeMobileSheet(e) {
+    if (!e || e.target === document.getElementById('mobile-sheet'))
+        document.getElementById('mobile-sheet').style.display = 'none';
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

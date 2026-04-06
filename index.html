@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OberFans · Nischen Kontent</title>
+<title>OberFans ·  Porn Website</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -347,7 +347,6 @@ textarea.cap:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,255,
         <!-- REGISTER -->
         <div id="fr" style="display:none">
           <div class="auth-info">🔞 Du musst mindestens <strong>13 Jahre</strong> alt sein, um OberFans beizutreten.</div>
-          <!-- Avatar -->
           <div style="margin-bottom:12px;">
             <div style="font-size:.67rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;">Profilbild (optional)</div>
             <div class="av-upload-wrap">
@@ -544,260 +543,271 @@ textarea.cap:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,255,
 <div class="toast" id="toast"></div>
 
 <script>
-/* QUELLTEXT-SCHUTZ */
-document.addEventListener('contextmenu',function(e){
-  if(!e.target.matches('input,textarea,video,img,select')){e.preventDefault();toast('🔒 Quelltext geschützt');return false;}
-});
-document.addEventListener('keydown',function(e){
-  if(e.keyCode===123||(e.ctrlKey&&e.keyCode===85)||(e.ctrlKey&&e.shiftKey&&[73,74,67].includes(e.keyCode))){
-    e.preventDefault();toast('🔒 Quelltext geschützt');return false;
-  }
-});
-var _b64=atob('aHR0cHM6Ly9vYmVyZmFucy1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL2FwaQ==');
+const API = '/api';
+let token = localStorage.getItem('of_token');
+let uname = localStorage.getItem('of_user');
+let uavt  = localStorage.getItem('of_avatar');
+let fD = null, fM = null, mediaTypeD = 'img', mediaTypeM = 'img';
+let allPosts = [], currentFeedMode = 'all';
+let myProfile = { bio: '', gender: '', age: '' };
+let modalAvatarFile = null;
 
-/* NISCHEN LAUFBAND */
-(function(){
-  const n=['Gaming','Kochen','Fitness','Musik','Tech','Mode','Travel','Kunst','Sport','Beauty','Film','DIY','Tiere','Natur','Humor','Wissenschaft','Fotografie','Anime','Handwerk','Küche'];
-  const sep='<span class="nischen-sep"> ✦ </span>';
-  const items=n.map(x=>`<span class="nischen-item">${x}</span>${sep}`).join('');
-  document.getElementById('nischen-track').innerHTML=items+items;
-})();
-
-const API=_b64;
-let token=localStorage.getItem('of_token');
-let uname=localStorage.getItem('of_user');
-let uavt=localStorage.getItem('of_avatar');
-let fD=null,fM=null,mediaTypeD='img',mediaTypeM='img';
-let allPosts=[],currentFeedMode='all';
-let myProfile={bio:'',gender:'',age:''};
-let modalAvatarFile=null;
-
-window.onload=()=>{
-  const today=new Date().toISOString().split('T')[0];
-  document.getElementById('rbirth').setAttribute('max',today);
-  if(token&&uname)showApp();
+window.onload = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('rbirth').setAttribute('max', today);
+  if (token && uname) showApp();
 };
-document.addEventListener('click',e=>{
-  if(!document.getElementById('hdr-search-wrap').contains(e.target))closeDrop();
+document.addEventListener('click', e => {
+  if (!document.getElementById('hdr-search-wrap').contains(e.target)) closeDrop();
 });
 
-/* AUTH TABS */
-function tab(t){
-  document.getElementById('fl').style.display=t==='login'?'':'none';
-  document.getElementById('fr').style.display=t==='reg'?'':'none';
-  document.getElementById('tl').classList.toggle('active',t==='login');
-  document.getElementById('tr').classList.toggle('active',t==='reg');
-  document.getElementById('auth-err').style.display='none';
+/* ── AUTH TABS ─────────────────────────────────────────────────────────────── */
+function tab(t) {
+  document.getElementById('fl').style.display = t === 'login' ? '' : 'none';
+  document.getElementById('fr').style.display = t === 'reg'   ? '' : 'none';
+  document.getElementById('tl').classList.toggle('active', t === 'login');
+  document.getElementById('tr').classList.toggle('active', t === 'reg');
+  document.getElementById('auth-err').style.display = 'none';
 }
-function err(m){const e=document.getElementById('auth-err');e.textContent=m;e.style.display='block';}
+function err(m) { const e = document.getElementById('auth-err'); e.textContent = m; e.style.display = 'block'; }
 
-/* REGISTER */
-function updateRegAvatar(){
-  const u=document.getElementById('ru').value.trim();
-  if(u&&!document.getElementById('reg-av-inp').files.length)
-    document.getElementById('reg-av-prev').src=`https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(u)}`;
+/* ── REGISTER ──────────────────────────────────────────────────────────────── */
+function updateRegAvatar() {
+  const u = document.getElementById('ru').value.trim();
+  if (u && !document.getElementById('reg-av-inp').files.length)
+    document.getElementById('reg-av-prev').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(u)}`;
 }
-function previewRegAvatar(inp){
-  const f=inp.files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>document.getElementById('reg-av-prev').src=e.target.result;r.readAsDataURL(f);
+function previewRegAvatar(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = e => document.getElementById('reg-av-prev').src = e.target.result; r.readAsDataURL(f);
 }
-function calcAge(birthStr){
-  const b=new Date(birthStr),t=new Date();
-  let a=t.getFullYear()-b.getFullYear();
-  if(t.getMonth()-b.getMonth()<0||(t.getMonth()-b.getMonth()===0&&t.getDate()<b.getDate()))a--;
+function calcAge(birthStr) {
+  const b = new Date(birthStr), t = new Date();
+  let a = t.getFullYear() - b.getFullYear();
+  if (t.getMonth() - b.getMonth() < 0 || (t.getMonth() - b.getMonth() === 0 && t.getDate() < b.getDate())) a--;
   return a;
 }
-function checkAge(){
-  const val=document.getElementById('rbirth').value;
-  const note=document.getElementById('age-note');
-  if(!val){note.textContent='';return;}
-  const age=calcAge(val);
-  if(age<13){note.textContent='❌ Muss mindestens 13 Jahre alt sein.';note.style.color='#ff8080';}
-  else{note.textContent=`✓ Alter: ${age} Jahre`;note.style.color='var(--accent)';}
+function checkAge() {
+  const val = document.getElementById('rbirth').value;
+  const note = document.getElementById('age-note');
+  if (!val) { note.textContent = ''; return; }
+  const age = calcAge(val);
+  if (age < 13) { note.textContent = '❌ Muss mindestens 13 Jahre alt sein.'; note.style.color = '#ff8080'; }
+  else { note.textContent = `✓ Alter: ${age} Jahre`; note.style.color = 'var(--accent)'; }
 }
-async function regUser(){
-  const u=document.getElementById('ru').value.trim(),p=document.getElementById('rp').value;
-  const birth=document.getElementById('rbirth').value,gender=document.getElementById('rgender').value;
-  const bio=document.getElementById('rbio').value.trim();
-  document.getElementById('auth-err').style.display='none';
-  if(!u||u.length<2)return err('Benutzername zu kurz.');
-  if(p.length<6)return err('Passwort mind. 6 Zeichen.');
-  if(!birth)return err('Bitte Geburtsdatum angeben.');
-  if(!gender)return err('Bitte Geschlecht angeben.');
-  if(calcAge(birth)<13)return err('Du musst mindestens 13 Jahre alt sein.');
-  try{
-    let avatarData='';
-    const avF=document.getElementById('reg-av-inp').files[0];
-    if(avF)avatarData=await fileToB64(avF);
-    const r=await fetch(`${API}/register`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:u,password:p,bio,gender,birthdate:birth,avatar:avatarData})});
-    const d=await r.json();
-    if(!r.ok)return err(d.error||'Fehler beim Registrieren.');
+async function regUser() {
+  const u = document.getElementById('ru').value.trim();
+  const p = document.getElementById('rp').value;
+  const birth = document.getElementById('rbirth').value;
+  const gender = document.getElementById('rgender').value;
+  const bio = document.getElementById('rbio').value.trim();
+  document.getElementById('auth-err').style.display = 'none';
+  if (!u || u.length < 2) return err('Benutzername zu kurz.');
+  if (p.length < 6) return err('Passwort mind. 6 Zeichen.');
+  if (!birth) return err('Bitte Geburtsdatum angeben.');
+  if (!gender) return err('Bitte Geschlecht angeben.');
+  if (calcAge(birth) < 13) return err('Du musst mindestens 13 Jahre alt sein.');
+  try {
+    let avatarData = '';
+    const avF = document.getElementById('reg-av-inp').files[0];
+    if (avF) avatarData = await fileToB64(avF);
+    const r = await fetch(`${API}/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p, bio, gender, birthdate: birth, avatar: avatarData })
+    });
+    const d = await r.json();
+    if (!r.ok) return err(d.error || 'Fehler beim Registrieren.');
     toast('✅ Konto erstellt! Jetzt einloggen.');
-    tab('login');document.getElementById('lu').value=u;
-  }catch{err('Server nicht erreichbar.');}
+    tab('login'); document.getElementById('lu').value = u;
+  } catch { err('Server nicht erreichbar.'); }
 }
-async function login(){
-  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
-  document.getElementById('auth-err').style.display='none';
-  try{
-    const r=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
-    const d=await r.json();
-    if(!r.ok)return err(d.error||'Ungültige Anmeldedaten.');
-    token=d.token;uname=d.username;uavt=d.avatar;
-    localStorage.setItem('of_token',token);localStorage.setItem('of_user',uname);localStorage.setItem('of_avatar',uavt);
-    myProfile={bio:d.bio||'',gender:d.gender||'',age:d.age||''};
-    showApp();
-  }catch{err('Server nicht erreichbar.');}
-}
-function logout(){['of_token','of_user','of_avatar'].forEach(k=>localStorage.removeItem(k));location.reload();}
 
-/* SHOW APP */
-function showApp(){
-  document.getElementById('auth-overlay').style.display='none';
-  document.getElementById('app').style.display='flex';
-  const av=uavt||`https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(uname)}`;
-  document.getElementById('hun').textContent='@'+uname;
-  document.getElementById('hav').src=av;
-  document.getElementById('sb-av').src=av;
-  document.getElementById('sb-name').textContent='@'+uname;
-  document.getElementById('sb-bio').textContent=myProfile.bio||'Nischen Kontent Creator';
-  document.addEventListener('dragover',e=>e.preventDefault());
-  document.addEventListener('drop',e=>e.preventDefault());
-  setupDZ('dz','pi','pv','dzp',false);
-  setupDZ('dzm','pim','pvm','dzpm',true);
+/* ── LOGIN ─────────────────────────────────────────────────────────────────── */
+async function login() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  document.getElementById('auth-err').style.display = 'none';
+  try {
+    const r = await fetch(`${API}/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const d = await r.json();
+    if (!r.ok) return err(d.error || 'Ungültige Anmeldedaten.');
+    token = d.token; uname = d.username; uavt = d.avatar;
+    localStorage.setItem('of_token', token);
+    localStorage.setItem('of_user', uname);
+    localStorage.setItem('of_avatar', uavt || '');
+    myProfile = { bio: d.bio || '', gender: d.gender || '', age: d.age || '' };
+    showApp();
+  } catch { err('Server nicht erreichbar.'); }
+}
+function logout() {
+  ['of_token', 'of_user', 'of_avatar'].forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+/* ── SHOW APP ──────────────────────────────────────────────────────────────── */
+function showApp() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  const av = uavt || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(uname)}`;
+  document.getElementById('hun').textContent = '@' + uname;
+  document.getElementById('hav').src = av;
+  document.getElementById('sb-av').src = av;
+  document.getElementById('sb-name').textContent = '@' + uname;
+  document.getElementById('sb-bio').textContent = myProfile.bio || 'Nischen Kontent Creator';
+  document.addEventListener('dragover', e => e.preventDefault());
+  document.addEventListener('drop', e => e.preventDefault());
+  setupDZ('dz',  'pi',  'pv',  'dzp',  false);
+  setupDZ('dzm', 'pim', 'pvm', 'dzpm', true);
   loadFeed();
 }
 
-/* MEDIA TOGGLE */
-function switchMedia(type,mob){
-  if(mob){
-    mediaTypeM=type;
-    document.getElementById('mt-imgm').classList.toggle('active',type==='img');
-    document.getElementById('mt-vidm').classList.toggle('active',type==='vid');
-    document.getElementById('fim').accept=type==='img'?'image/*':'video/*';
-    document.getElementById('vl-m').style.display=type==='vid'?'block':'none';
-    fM=null;resetDZ('dzm','pim','pvm','dzpm','fim');
-  }else{
-    mediaTypeD=type;
-    document.getElementById('mt-img').classList.toggle('active',type==='img');
-    document.getElementById('mt-vid').classList.toggle('active',type==='vid');
-    document.getElementById('fi').accept=type==='img'?'image/*':'video/*';
-    document.getElementById('vl-d').style.display=type==='vid'?'block':'none';
-    fD=null;resetDZ('dz','pi','pv','dzp','fi');
+/* ── MEDIA TOGGLE ──────────────────────────────────────────────────────────── */
+function switchMedia(type, mob) {
+  if (mob) {
+    mediaTypeM = type;
+    document.getElementById('mt-imgm').classList.toggle('active', type === 'img');
+    document.getElementById('mt-vidm').classList.toggle('active', type === 'vid');
+    document.getElementById('fim').accept = type === 'img' ? 'image/*' : 'video/*';
+    document.getElementById('vl-m').style.display = type === 'vid' ? 'block' : 'none';
+    fM = null; resetDZ('dzm', 'pim', 'pvm', 'dzpm', 'fim');
+  } else {
+    mediaTypeD = type;
+    document.getElementById('mt-img').classList.toggle('active', type === 'img');
+    document.getElementById('mt-vid').classList.toggle('active', type === 'vid');
+    document.getElementById('fi').accept = type === 'img' ? 'image/*' : 'video/*';
+    document.getElementById('vl-d').style.display = type === 'vid' ? 'block' : 'none';
+    fD = null; resetDZ('dz', 'pi', 'pv', 'dzp', 'fi');
   }
 }
 
-/* DROPZONE */
-function setupDZ(zId,pId,vId,phId,mob){
-  const z=document.getElementById(zId);if(!z)return;
-  z.addEventListener('dragover',e=>{e.stopPropagation();z.classList.add('over');});
-  z.addEventListener('dragleave',()=>z.classList.remove('over'));
-  z.addEventListener('drop',e=>{e.stopPropagation();z.classList.remove('over');const f=e.dataTransfer.files[0];if(f)handleFileSet(f,pId,vId,phId,zId,mob);});
+/* ── DROPZONE ──────────────────────────────────────────────────────────────── */
+function setupDZ(zId, pId, vId, phId, mob) {
+  const z = document.getElementById(zId); if (!z) return;
+  z.addEventListener('dragover', e => { e.stopPropagation(); z.classList.add('over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('over'));
+  z.addEventListener('drop', e => { e.stopPropagation(); z.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) handleFileSet(f, pId, vId, phId, zId, mob); });
 }
-function onFile(inp,mob){
-  const f=inp.files[0];if(!f)return;
-  const pId=mob?'pim':'pi',vId=mob?'pvm':'pv',phId=mob?'dzpm':'dzp',zId=mob?'dzm':'dz';
-  handleFileSet(f,pId,vId,phId,zId,mob);
+function onFile(inp, mob) {
+  const f = inp.files[0]; if (!f) return;
+  const pId = mob ? 'pim' : 'pi', vId = mob ? 'pvm' : 'pv', phId = mob ? 'dzpm' : 'dzp', zId = mob ? 'dzm' : 'dz';
+  handleFileSet(f, pId, vId, phId, zId, mob);
 }
-function handleFileSet(f,pId,vId,phId,zId,mob){
-  const isVid=f.type.startsWith('video/'),isImg=f.type.startsWith('image/');
-  if(!isVid&&!isImg){toast('⚠️ Nur Bilder oder Videos erlaubt');return;}
-  if(isVid){
-    const url=URL.createObjectURL(f);const tmp=document.createElement('video');tmp.preload='metadata';
-    tmp.onloadedmetadata=()=>{
+function handleFileSet(f, pId, vId, phId, zId, mob) {
+  const isVid = f.type.startsWith('video/'), isImg = f.type.startsWith('image/');
+  if (!isVid && !isImg) { toast('⚠️ Nur Bilder oder Videos erlaubt'); return; }
+  if (isVid) {
+    const url = URL.createObjectURL(f);
+    const tmp = document.createElement('video'); tmp.preload = 'metadata';
+    tmp.onloadedmetadata = () => {
       URL.revokeObjectURL(url);
-      if(tmp.duration>180){toast('❌ Video max. 3 Minuten!');return;}
-      mob?(fM=f):(fD=f);
-      const vid=document.getElementById(vId);vid.src=URL.createObjectURL(f);vid.style.display='block';
-      document.getElementById(pId).style.display='none';
-      document.getElementById(phId).style.display='none';
+      if (tmp.duration > 180) { toast('❌ Video max. 3 Minuten!'); return; }
+      mob ? (fM = f) : (fD = f);
+      const vid = document.getElementById(vId); vid.src = URL.createObjectURL(f); vid.style.display = 'block';
+      document.getElementById(pId).style.display = 'none';
+      document.getElementById(phId).style.display = 'none';
       document.getElementById(zId).classList.add('has-media');
-    };tmp.src=url;return;
+    }; tmp.src = url; return;
   }
-  mob?(fM=f):(fD=f);
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=document.getElementById(pId);img.src=e.target.result;img.style.display='block';
-    const vid=document.getElementById(vId);if(vid){vid.src='';vid.style.display='none';}
-    document.getElementById(phId).style.display='none';
+  mob ? (fM = f) : (fD = f);
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(pId); img.src = e.target.result; img.style.display = 'block';
+    const vid = document.getElementById(vId); if (vid) { vid.src = ''; vid.style.display = 'none'; }
+    document.getElementById(phId).style.display = 'none';
     document.getElementById(zId).classList.add('has-media');
-  };reader.readAsDataURL(f);
+  }; reader.readAsDataURL(f);
 }
-function rm(e,mob){e.stopPropagation();mob?(fM=null,resetDZ('dzm','pim','pvm','dzpm','fim')):(fD=null,resetDZ('dz','pi','pv','dzp','fi'));}
-function resetDZ(zId,pId,vId,phId,inpId){
-  const i=document.getElementById(pId);if(i){i.src='';i.style.display='none';}
-  const v=document.getElementById(vId);if(v){v.src='';v.style.display='none';}
-  const p=document.getElementById(phId);if(p)p.style.display='';
-  document.getElementById(zId).classList.remove('has-media','over');
-  document.getElementById(inpId).value='';
-}
-
-/* POST */
-async function postMedia(mob){
-  const capId=mob?'capm':'cap',btnId=mob?'bpm':'bp',file=mob?fM:fD;
-  const cap=document.getElementById(capId).value.trim();
-  if(!file&&!cap)return toast('⚠️ Bild, Video oder Text erforderlich');
-  const btn=document.getElementById(btnId);
-  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
-  const fd=new FormData();if(file)fd.append('image',file);fd.append('caption',cap);
-  try{
-    const r=await fetch(`${API}/posts`,{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
-    if(!r.ok)throw 0;
-    document.getElementById(capId).value='';
-    if(mob){fM=null;resetDZ('dzm','pim','pvm','dzpm','fim');closeSheet();}
-    else{fD=null;resetDZ('dz','pi','pv','dzp','fi');}
-    toast('✅ Nischen Kontent veröffentlicht!');loadFeed();
-  }catch{toast('❌ Fehler beim Posten');}
-  finally{btn.disabled=false;btn.innerHTML='<span>Posten</span>';}
+function rm(e, mob) { e.stopPropagation(); mob ? (fM = null, resetDZ('dzm','pim','pvm','dzpm','fim')) : (fD = null, resetDZ('dz','pi','pv','dzp','fi')); }
+function resetDZ(zId, pId, vId, phId, inpId) {
+  const i = document.getElementById(pId); if (i) { i.src = ''; i.style.display = 'none'; }
+  const v = document.getElementById(vId); if (v) { v.src = ''; v.style.display = 'none'; }
+  const p = document.getElementById(phId); if (p) p.style.display = '';
+  document.getElementById(zId).classList.remove('has-media', 'over');
+  document.getElementById(inpId).value = '';
 }
 
-/* FEED */
-function showFeed(mode,btn){
-  currentFeedMode=mode;
-  document.querySelectorAll('.feed-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');renderFeed();
+/* ── POST ──────────────────────────────────────────────────────────────────── */
+async function postMedia(mob) {
+  const capId = mob ? 'capm' : 'cap', btnId = mob ? 'bpm' : 'bp', file = mob ? fM : fD;
+  const cap = document.getElementById(capId).value.trim();
+  if (!file && !cap) return toast('⚠️ Bild, Video oder Text erforderlich');
+  const btn = document.getElementById(btnId);
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  const fd = new FormData();
+  if (file) fd.append('image', file);
+  fd.append('caption', cap);
+  try {
+    const r = await fetch(`${API}/posts`, { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+    if (!r.ok) throw 0;
+    document.getElementById(capId).value = '';
+    if (mob) { fM = null; resetDZ('dzm','pim','pvm','dzpm','fim'); closeSheet(); }
+    else { fD = null; resetDZ('dz','pi','pv','dzp','fi'); }
+    toast('✅ Nischen Kontent veröffentlicht!'); loadFeed();
+  } catch { toast('❌ Fehler beim Posten'); }
+  finally { btn.disabled = false; btn.innerHTML = '<span>Posten</span>'; }
 }
-async function loadFeed(){
-  const feed=document.getElementById('feed');feed.innerHTML=skel(3);
-  try{
-    const r=await fetch(`${API}/posts`,{headers:{Authorization:'Bearer '+token}});
-    if(r.status===401){logout();return;}
-    allPosts=await r.json();renderFeed();
-    document.getElementById('stp').textContent=allPosts.length;
-    document.getElementById('stl').textContent=allPosts.reduce((a,p)=>a+p.likes.length,0);
-    document.getElementById('stc').textContent=allPosts.reduce((a,p)=>a+p.comments.length,0);
-  }catch{document.getElementById('feed').innerHTML=`<div class="feed-empty"><div class="ei">⚠️</div><h3>Server nicht erreichbar</h3><p>Railway-Deployment prüfen.</p></div>`;}
+
+/* ── FEED ──────────────────────────────────────────────────────────────────── */
+function showFeed(mode, btn) {
+  currentFeedMode = mode;
+  document.querySelectorAll('.feed-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
 }
-function renderFeed(){
-  const feed=document.getElementById('feed');
-  const posts=currentFeedMode==='mine'?allPosts.filter(p=>p.author===uname):allPosts;
-  feed.innerHTML='';
-  if(!posts.length){feed.innerHTML=`<div class="feed-empty"><div class="ei">📭</div><h3>Noch kein Nischen Kontent</h3><p>${currentFeedMode==='mine'?'Erstelle deinen ersten Post!':'Sei der Erste!'}</p></div>`;return;}
-  posts.forEach((p,i)=>{const el=document.createElement('div');el.innerHTML=renderPost(p);const c=el.firstElementChild;c.style.animationDelay=(i*.06)+'s';feed.appendChild(c);});
+async function loadFeed() {
+  const feed = document.getElementById('feed'); feed.innerHTML = skel(3);
+  try {
+    const r = await fetch(`${API}/posts`, { headers: { Authorization: 'Bearer ' + token } });
+    if (r.status === 401) { logout(); return; }
+    allPosts = await r.json(); renderFeed();
+    document.getElementById('stp').textContent = allPosts.length;
+    document.getElementById('stl').textContent = allPosts.reduce((a, p) => a + p.likes.length, 0);
+    document.getElementById('stc').textContent = allPosts.reduce((a, p) => a + p.comments.length, 0);
+  } catch {
+    document.getElementById('feed').innerHTML = `<div class="feed-empty"><div class="ei">⚠️</div><h3>Server nicht erreichbar</h3><p>Bitte Server prüfen.</p></div>`;
+  }
 }
-function skel(n){return Array.from({length:n},()=>`<div class="skel-card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><div class="sk sk-circle"></div><div style="flex:1"><div class="sk" style="width:34%;height:9px;margin-bottom:4px"></div><div class="sk" style="width:18%;height:8px"></div></div></div><div class="sk sk-img"></div></div>`).join('');}
-function isVidUrl(u){return u&&/\.(mp4|webm|ogg|mov)(\?|$)/i.test(u);}
-function renderPost(p){
-  const liked=p.likes.includes(uname),disliked=(p.dislikes||[]).includes(uname);
-  const time=new Date(p.createdAt).toLocaleDateString('de-DE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-  const av=getAv(p.author,p.avatar);
-  const media=p.imageUrl?(isVidUrl(p.imageUrl)?`<video class="post-vid" src="${p.imageUrl}" controls preload="metadata"></video>`:`<img class="post-img" src="${p.imageUrl}" alt="" loading="lazy">`):'';
-  return`<article class="post" id="post-${p.id}">
+function renderFeed() {
+  const feed = document.getElementById('feed');
+  const posts = currentFeedMode === 'mine' ? allPosts.filter(p => p.author === uname) : allPosts;
+  feed.innerHTML = '';
+  if (!posts.length) {
+    feed.innerHTML = `<div class="feed-empty"><div class="ei">📭</div><h3>Noch kein Nischen Kontent</h3><p>${currentFeedMode === 'mine' ? 'Erstelle deinen ersten Post!' : 'Sei der Erste!'}</p></div>`;
+    return;
+  }
+  posts.forEach((p, i) => { const el = document.createElement('div'); el.innerHTML = renderPost(p); const c = el.firstElementChild; c.style.animationDelay = (i * .06) + 's'; feed.appendChild(c); });
+}
+function skel(n) {
+  return Array.from({ length: n }, () => `<div class="skel-card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><div class="sk sk-circle"></div><div style="flex:1"><div class="sk" style="width:34%;height:9px;margin-bottom:4px"></div><div class="sk" style="width:18%;height:8px"></div></div></div><div class="sk sk-img"></div></div>`).join('');
+}
+function isVidUrl(u) { return u && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(u); }
+function renderPost(p) {
+  const liked = p.likes.includes(uname), disliked = (p.dislikes || []).includes(uname);
+  const time = new Date(p.createdAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const av = getAv(p.author, p.avatar);
+  const media = p.imageUrl
+    ? (isVidUrl(p.imageUrl)
+        ? `<video class="post-vid" src="${p.imageUrl}" controls preload="metadata"></video>`
+        : `<img class="post-img" src="${p.imageUrl}" alt="" loading="lazy">`)
+    : '';
+  return `<article class="post" id="post-${p.id}">
   <div class="post-hd">
     <img class="post-av" src="${av}" alt="" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(p.author)}'" onclick="viewProfile('${p.author}')">
     <div><div class="post-author" onclick="viewProfile('${p.author}')">${esc(p.author)}</div><div class="post-time">${time} · Nischen Kontent</div></div>
-    ${p.author===uname?'<span class="post-badge">Mein Post</span>':''}
+    ${p.author === uname ? '<span class="post-badge">Mein Post</span>' : ''}
   </div>
   ${media}
   <div class="post-bd">
-    ${p.caption?`<p class="post-cap">${esc(p.caption)}</p>`:''}
+    ${p.caption ? `<p class="post-cap">${esc(p.caption)}</p>` : ''}
     <div class="post-acts">
-      <button class="r-btn ${liked?'liked':''}" onclick="react('${p.id}','like',this)">❤️ <span id="lc-${p.id}">${p.likes.length}</span></button>
-      <button class="r-btn ${disliked?'disliked':''}" onclick="react('${p.id}','dislike',this)">👎 <span id="dc-${p.id}">${(p.dislikes||[]).length}</span></button>
+      <button class="r-btn ${liked ? 'liked' : ''}" onclick="react('${p.id}','like',this)">❤️ <span id="lc-${p.id}">${p.likes.length}</span></button>
+      <button class="r-btn ${disliked ? 'disliked' : ''}" onclick="react('${p.id}','dislike',this)">👎 <span id="dc-${p.id}">${(p.dislikes || []).length}</span></button>
     </div>
     <div class="cmt-sec">
-      <ul class="cmt-list" id="cl-${p.id}">${(p.comments||[]).map((c,ci)=>renderCmt(c,p.id,ci)).join('')}</ul>
+      <ul class="cmt-list" id="cl-${p.id}">${(p.comments || []).map((c, ci) => renderCmt(c, p.id, ci)).join('')}</ul>
       <div class="cmt-row">
         <input type="text" id="ci-${p.id}" placeholder="Kommentieren..." onkeydown="if(event.key==='Enter')comment('${p.id}')">
         <button class="btn-send" onclick="comment('${p.id}')">➤</button>
@@ -806,17 +816,20 @@ function renderPost(p){
   </div>
 </article>`;
 }
-function renderCmt(c,pid,ci){
-  const replies=(c.replies||[]).map(r=>`<li class="cmt-item"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(r.user)}" alt=""><div class="cmt-bub"><div class="cmt-user">@${esc(r.user)}</div><div class="cmt-txt">${esc(r.text)}</div></div></li>`).join('');
-  return`<li class="cmt-item" id="cmt-${pid}-${ci}">
-  <img src="${getAv(c.user)}" alt="">
+function renderCmt(c, pid, ci) {
+  const replies = (c.replies || []).map(r =>
+    `<li class="cmt-item"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(r.user)}" alt=""><div class="cmt-bub"><div class="cmt-user">@${esc(r.user)}</div><div class="cmt-txt">${esc(r.text)}</div></div></li>`
+  ).join('');
+  const av = c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(c.user)}`;
+  return `<li class="cmt-item" id="cmt-${pid}-${ci}">
+  <img src="${av}" alt="">
   <div style="flex:1">
     <div class="cmt-bub">
       <div class="cmt-user">@${esc(c.user)}</div>
       <div class="cmt-txt">${esc(c.text)}</div>
       <div class="cmt-actions"><button class="cmt-reply-btn" onclick="toggleReply('${pid}','${ci}')">↩ Antworten</button></div>
     </div>
-    ${replies?`<ul class="reply-list">${replies}</ul>`:''}
+    ${replies ? `<ul class="reply-list">${replies}</ul>` : ''}
     <div class="reply-input-wrap" id="reply-wrap-${pid}-${ci}">
       <input type="text" id="reply-inp-${pid}-${ci}" placeholder="@${esc(c.user)} antworten..." onkeydown="if(event.key==='Enter')sendReply('${pid}','${ci}','${esc(c.user)}')">
       <button onclick="sendReply('${pid}','${ci}','${esc(c.user)}')">➤</button>
@@ -825,162 +838,277 @@ function renderCmt(c,pid,ci){
 </li>`;
 }
 
-/* REPLY */
-function toggleReply(pid,ci){
-  const w=document.getElementById(`reply-wrap-${pid}-${ci}`);const was=w.classList.contains('open');
-  document.querySelectorAll('.reply-input-wrap.open').forEach(x=>x.classList.remove('open'));
-  if(!was){w.classList.add('open');document.getElementById(`reply-inp-${pid}-${ci}`).focus();}
+/* ── REPLY ─────────────────────────────────────────────────────────────────── */
+function toggleReply(pid, ci) {
+  const w = document.getElementById(`reply-wrap-${pid}-${ci}`);
+  const was = w.classList.contains('open');
+  document.querySelectorAll('.reply-input-wrap.open').forEach(x => x.classList.remove('open'));
+  if (!was) { w.classList.add('open'); document.getElementById(`reply-inp-${pid}-${ci}`).focus(); }
 }
-async function sendReply(pid,ci,user){
-  const inp=document.getElementById(`reply-inp-${pid}-${ci}`);const t=inp.value.trim();if(!t)return;
-  inp.value='';const full=`@${user} ${t}`;
-  const r=await fetch(`${API}/posts/${pid}/comment`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({text:full})});
-  if(!r.ok)return;const c=await r.json();
-  const w=document.getElementById(`reply-wrap-${pid}-${ci}`);w.classList.remove('open');
-  let rl=w.previousElementSibling;
-  if(!rl||!rl.classList.contains('reply-list')){rl=document.createElement('ul');rl.className='reply-list';w.insertAdjacentElement('beforebegin',rl);}
-  const li=document.createElement('li');li.className='cmt-item';
-  li.innerHTML=`<img src="${getAv(c.user)}" alt=""><div class="cmt-bub"><div class="cmt-user">@${esc(c.user)}</div><div class="cmt-txt">${esc(full)}</div></div>`;
-  rl.appendChild(li);rl.scrollTop=rl.scrollHeight;toast('💬 Antwort gesendet');
-}
-
-/* REACT */
-async function react(pid,type,btn){
-  const r=await fetch(`${API}/posts/${pid}/react`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({type})});
-  if(!r.ok)return;const d=await r.json();
-  document.getElementById('lc-'+pid).textContent=d.likes;
-  const dc=document.getElementById('dc-'+pid);if(dc)dc.textContent=d.dislikes||0;
-  btn.closest('.post').querySelectorAll('.r-btn').forEach(b=>b.classList.remove('liked','disliked'));
-  if(type==='like')btn.classList.add('liked');if(type==='dislike')btn.classList.add('disliked');
-}
-
-/* COMMENT */
-async function comment(pid){
-  const inp=document.getElementById('ci-'+pid);const text=inp.value.trim();if(!text)return;inp.value='';
-  const r=await fetch(`${API}/posts/${pid}/comment`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({text})});
-  if(!r.ok)return;const c=await r.json();
-  const list=document.getElementById('cl-'+pid);const ci=list.children.length;
-  const li=document.createElement('li');li.className='cmt-item';
-  li.innerHTML=`<img src="${getAv(c.user)}" alt=""><div style="flex:1"><div class="cmt-bub"><div class="cmt-user">@${esc(c.user)}</div><div class="cmt-txt">${esc(c.text)}</div><div class="cmt-actions"><button class="cmt-reply-btn" onclick="toggleReply('${pid}','${ci}')">↩ Antworten</button></div></div><div class="reply-input-wrap" id="reply-wrap-${pid}-${ci}"><input type="text" id="reply-inp-${pid}-${ci}" placeholder="@${esc(c.user)} antworten..." onkeydown="if(event.key==='Enter')sendReply('${pid}','${ci}','${esc(c.user)}')"><button onclick="sendReply('${pid}','${ci}','${esc(c.user)}')">➤</button></div></div>`;
-  li.style.animation='fadeUp .22s ease';list.appendChild(li);list.scrollTop=list.scrollHeight;
+async function sendReply(pid, ci, user) {
+  const inp = document.getElementById(`reply-inp-${pid}-${ci}`);
+  const t = inp.value.trim(); if (!t) return;
+  inp.value = ''; const full = `@${user} ${t}`;
+  const r = await fetch(`${API}/posts/${pid}/comment`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify({ text: full })
+  });
+  if (!r.ok) return;
+  const c = await r.json();
+  const w = document.getElementById(`reply-wrap-${pid}-${ci}`); w.classList.remove('open');
+  let rl = w.previousElementSibling;
+  if (!rl || !rl.classList.contains('reply-list')) {
+    rl = document.createElement('ul'); rl.className = 'reply-list'; w.insertAdjacentElement('beforebegin', rl);
+  }
+  const li = document.createElement('li'); li.className = 'cmt-item';
+  const av = c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(c.user)}`;
+  li.innerHTML = `<img src="${av}" alt=""><div class="cmt-bub"><div class="cmt-user">@${esc(c.user)}</div><div class="cmt-txt">${esc(full)}</div></div>`;
+  rl.appendChild(li); rl.scrollTop = rl.scrollHeight; toast('💬 Antwort gesendet');
 }
 
-/* PROFILE */
-function getProf(u){const all=JSON.parse(localStorage.getItem('of_profiles')||'{}');if(u===uname)return{...(all[u]||{}),...myProfile,avatar:uavt||''};return all[u]||{};}
-function saveProf(u,data){const all=JSON.parse(localStorage.getItem('of_profiles')||'{}');all[u]={...(all[u]||{}),...data};localStorage.setItem('of_profiles',JSON.stringify(all));}
-function getAv(u,fallback){const p=getProf(u);return p.avatar||fallback||`https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(u)}`;}
-
-function viewProfile(username){
-  document.getElementById('feed').style.display='none';
-  document.getElementById('feed-nav').style.display='none';
-  document.getElementById('profile-view').style.display='block';
-  const isMe=username===uname;
-  document.getElementById('prof-edit-btn').style.display=isMe?'':'none';
-  document.getElementById('prof-av-edit-btn').style.display=isMe?'flex':'none';
-  const p=getProf(username);
-  document.getElementById('prof-av').src=getAv(username,null);
-  document.getElementById('prof-name').textContent=username;
-  document.getElementById('prof-handle').textContent='@'+username;
-  const gMap={male:'♂ Männlich',female:'♀ Weiblich',divers:'⚧ Divers',none:'—'};
-  let meta='<span class="prof-meta-item">✦ Nischen Kontent</span>';
-  if(p.gender&&p.gender!='none')meta+=`<span class="prof-meta-item">${gMap[p.gender]||p.gender}</span>`;
-  if(p.age)meta+=`<span class="prof-meta-item">${p.age} Jahre</span>`;
-  document.getElementById('prof-meta').innerHTML=meta;
-  const bioEl=document.getElementById('prof-bio');
-  if(p.bio){bioEl.textContent=p.bio;bioEl.style.display='block';}else bioEl.style.display='none';
-  const up=allPosts.filter(x=>x.author===username);
-  document.getElementById('ps-posts').textContent=up.length;
-  document.getElementById('ps-likes').textContent=up.reduce((a,x)=>a+x.likes.length,0);
-  document.getElementById('ps-cmts').textContent=up.reduce((a,x)=>a+x.comments.length,0);
-  const pf=document.getElementById('prof-feed');
-  if(!up.length){pf.innerHTML=`<div class="feed-empty"><div class="ei">📭</div><h3>Noch kein Nischen Kontent</h3><p>Dieser Creator hat noch nichts gepostet.</p></div>`;return;}
-  pf.innerHTML='';
-  up.forEach((x,i)=>{const el=document.createElement('div');el.innerHTML=renderPost(x);const c=el.firstElementChild;c.style.animationDelay=(i*.06)+'s';pf.appendChild(c);});
-}
-function backToFeed(){document.getElementById('profile-view').style.display='none';document.getElementById('feed').style.display='';document.getElementById('feed-nav').style.display='';}
-
-/* AVATAR CHANGE */
-async function changeAvatar(inp){
-  const f=inp.files[0];if(!f)return;
-  const b64=await fileToB64(f);
-  uavt=b64;localStorage.setItem('of_avatar',b64);
-  ['hav','sb-av','prof-av'].forEach(id=>document.getElementById(id).src=b64);
-  saveProf(uname,{avatar:b64});myProfile.avatar=b64;
-  toast('✅ Profilbild aktualisiert!');
+/* ── REACT ─────────────────────────────────────────────────────────────────── */
+async function react(pid, type, btn) {
+  const r = await fetch(`${API}/posts/${pid}/react`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify({ type })
+  });
+  if (!r.ok) return; const d = await r.json();
+  document.getElementById('lc-' + pid).textContent = d.likes;
+  const dc = document.getElementById('dc-' + pid); if (dc) dc.textContent = d.dislikes || 0;
+  btn.closest('.post').querySelectorAll('.r-btn').forEach(b => b.classList.remove('liked', 'disliked'));
+  if (type === 'like') btn.classList.add('liked');
+  if (type === 'dislike') btn.classList.add('disliked');
 }
 
-/* EDIT MODAL */
-function openEditModal(){
-  const p=getProf(uname);
-  document.getElementById('edit-bio').value=p.bio||'';
-  document.getElementById('edit-age').value=p.age||'';
-  document.getElementById('edit-gender').value=p.gender||'';
-  document.getElementById('modal-av').src=getAv(uname);
-  modalAvatarFile=null;
+/* ── COMMENT ───────────────────────────────────────────────────────────────── */
+async function comment(pid) {
+  const inp = document.getElementById('ci-' + pid);
+  const text = inp.value.trim(); if (!text) return; inp.value = '';
+  const r = await fetch(`${API}/posts/${pid}/comment`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify({ text })
+  });
+  if (!r.ok) return; const c = await r.json();
+  const list = document.getElementById('cl-' + pid); const ci = list.children.length;
+  const li = document.createElement('li'); li.className = 'cmt-item';
+  const av = c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(c.user)}`;
+  li.innerHTML = `<img src="${av}" alt=""><div style="flex:1"><div class="cmt-bub"><div class="cmt-user">@${esc(c.user)}</div><div class="cmt-txt">${esc(c.text)}</div><div class="cmt-actions"><button class="cmt-reply-btn" onclick="toggleReply('${pid}','${ci}')">↩ Antworten</button></div></div><div class="reply-input-wrap" id="reply-wrap-${pid}-${ci}"><input type="text" id="reply-inp-${pid}-${ci}" placeholder="@${esc(c.user)} antworten..." onkeydown="if(event.key==='Enter')sendReply('${pid}','${ci}','${esc(c.user)}')"><button onclick="sendReply('${pid}','${ci}','${esc(c.user)}')">➤</button></div></div>`;
+  li.style.animation = 'fadeUp .22s ease'; list.appendChild(li); list.scrollTop = list.scrollHeight;
+}
+
+/* ── PROFILE ───────────────────────────────────────────────────────────────── */
+// Cache für Profilinfos (vom Server geladen)
+const profileCache = {};
+
+function getAv(u, fallback) {
+  if (u === uname) return uavt || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(u)}`;
+  if (profileCache[u] && profileCache[u].avatar) return profileCache[u].avatar;
+  return fallback || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(u)}`;
+}
+
+async function fetchUserProfile(username) {
+  try {
+    const r = await fetch(`${API}/users/${username}`, { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    profileCache[username] = d;
+    return d;
+  } catch { return null; }
+}
+
+async function viewProfile(username) {
+  document.getElementById('feed').style.display = 'none';
+  document.getElementById('feed-nav').style.display = 'none';
+  document.getElementById('profile-view').style.display = 'block';
+
+  const isMe = username === uname;
+  document.getElementById('prof-edit-btn').style.display = isMe ? '' : 'none';
+  document.getElementById('prof-av-edit-btn').style.display = isMe ? 'flex' : 'none';
+
+  // Sofort mit bekannten Daten rendern
+  const av = getAv(username, null);
+  document.getElementById('prof-av').src = av;
+  document.getElementById('prof-name').textContent = username;
+  document.getElementById('prof-handle').textContent = '@' + username;
+
+  // Profil vom Server laden
+  let p;
+  if (isMe) {
+    p = myProfile;
+  } else {
+    p = profileCache[username] || await fetchUserProfile(username) || {};
+  }
+
+  const gMap = { male: '♂ Männlich', female: '♀ Weiblich', divers: '⚧ Divers', none: '—' };
+  let meta = '<span class="prof-meta-item">✦ Nischen Kontent</span>';
+  if (p.gender && p.gender !== 'none') meta += `<span class="prof-meta-item">${gMap[p.gender] || p.gender}</span>`;
+  if (p.age) meta += `<span class="prof-meta-item">${p.age} Jahre</span>`;
+  document.getElementById('prof-meta').innerHTML = meta;
+
+  const bioEl = document.getElementById('prof-bio');
+  if (p.bio) { bioEl.textContent = p.bio; bioEl.style.display = 'block'; }
+  else bioEl.style.display = 'none';
+
+  // Avatar aktualisieren falls vom Server geladen
+  if (p.avatar && !isMe) document.getElementById('prof-av').src = p.avatar;
+  if (isMe) document.getElementById('prof-av').src = uavt || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(uname)}`;
+
+  const up = allPosts.filter(x => x.author === username);
+  document.getElementById('ps-posts').textContent = up.length;
+  document.getElementById('ps-likes').textContent = up.reduce((a, x) => a + x.likes.length, 0);
+  document.getElementById('ps-cmts').textContent = up.reduce((a, x) => a + x.comments.length, 0);
+
+  const pf = document.getElementById('prof-feed');
+  if (!up.length) {
+    pf.innerHTML = `<div class="feed-empty"><div class="ei">📭</div><h3>Noch kein Nischen Kontent</h3><p>Dieser Creator hat noch nichts gepostet.</p></div>`;
+    return;
+  }
+  pf.innerHTML = '';
+  up.forEach((x, i) => { const el = document.createElement('div'); el.innerHTML = renderPost(x); const c = el.firstElementChild; c.style.animationDelay = (i * .06) + 's'; pf.appendChild(c); });
+}
+function backToFeed() {
+  document.getElementById('profile-view').style.display = 'none';
+  document.getElementById('feed').style.display = '';
+  document.getElementById('feed-nav').style.display = '';
+}
+
+/* ── AVATAR CHANGE (Profilseite) ────────────────────────────────────────────── */
+async function changeAvatar(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const b64 = await fileToB64(f);
+  // Sofort lokal aktualisieren
+  uavt = b64; localStorage.setItem('of_avatar', b64);
+  ['hav', 'sb-av', 'prof-av'].forEach(id => document.getElementById(id).src = b64);
+  myProfile.avatar = b64;
+  // An Server senden
+  try {
+    const r = await fetch(`${API}/profile`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ avatar: b64 })
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.token) { token = d.token; localStorage.setItem('of_token', token); }
+      toast('✅ Profilbild aktualisiert!');
+    } else { toast('❌ Fehler beim Speichern des Profilbilds'); }
+  } catch { toast('❌ Server nicht erreichbar'); }
+}
+
+/* ── EDIT MODAL ────────────────────────────────────────────────────────────── */
+function openEditModal() {
+  document.getElementById('edit-bio').value    = myProfile.bio    || '';
+  document.getElementById('edit-age').value    = myProfile.age    || '';
+  document.getElementById('edit-gender').value = myProfile.gender || '';
+  document.getElementById('modal-av').src = uavt || `https://api.dicebear.com/7.x/avataaars/svg?seed=${enc(uname)}`;
+  modalAvatarFile = null;
   document.getElementById('edit-modal').classList.add('open');
 }
-function closeEditModal(e){if(!e||e.target===document.getElementById('edit-modal'))document.getElementById('edit-modal').classList.remove('open');}
-function previewModalAvatar(inp){const f=inp.files[0];if(!f)return;modalAvatarFile=f;const r=new FileReader();r.onload=e=>document.getElementById('modal-av').src=e.target.result;r.readAsDataURL(f);}
-async function saveProfile(){
-  const bio=document.getElementById('edit-bio').value.trim();
-  const age=document.getElementById('edit-age').value;
-  const gender=document.getElementById('edit-gender').value;
-  if(age&&(isNaN(age)||Number(age)<13))return toast('❌ Alter muss mind. 13 sein');
-  if(modalAvatarFile){
-    const b64=await fileToB64(modalAvatarFile);
-    uavt=b64;localStorage.setItem('of_avatar',b64);
-    ['hav','sb-av','prof-av'].forEach(id=>document.getElementById(id).src=b64);
-  }
-  myProfile={...myProfile,bio,age,gender};
-  saveProf(uname,{bio,age,gender,avatar:uavt});
-  document.getElementById('sb-bio').textContent=bio||'Nischen Kontent Creator';
-  document.getElementById('edit-modal').classList.remove('open');
-  viewProfile(uname);toast('✅ Profil gespeichert!');
+function closeEditModal(e) {
+  if (!e || e.target === document.getElementById('edit-modal'))
+    document.getElementById('edit-modal').classList.remove('open');
+}
+function previewModalAvatar(inp) {
+  const f = inp.files[0]; if (!f) return;
+  modalAvatarFile = f;
+  const r = new FileReader(); r.onload = e => document.getElementById('modal-av').src = e.target.result; r.readAsDataURL(f);
+}
+async function saveProfile() {
+  const bio    = document.getElementById('edit-bio').value.trim();
+  const age    = document.getElementById('edit-age').value;
+  const gender = document.getElementById('edit-gender').value;
+  if (age && (isNaN(age) || Number(age) < 13)) return toast('❌ Alter muss mind. 13 sein');
+
+  let avatarB64 = undefined;
+  if (modalAvatarFile) avatarB64 = await fileToB64(modalAvatarFile);
+
+  try {
+    const body = { bio, age: age ? Number(age) : '', gender };
+    if (avatarB64) body.avatar = avatarB64;
+
+    const r = await fetch(`${API}/profile`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) return toast('❌ ' + (d.error || 'Fehler beim Speichern'));
+
+    // Token aktualisieren
+    if (d.token) { token = d.token; localStorage.setItem('of_token', token); }
+
+    // Avatar lokal updaten
+    if (avatarB64) {
+      uavt = avatarB64; localStorage.setItem('of_avatar', avatarB64);
+      ['hav', 'sb-av', 'prof-av'].forEach(id => document.getElementById(id).src = avatarB64);
+    }
+    if (d.avatar && !avatarB64) {
+      uavt = d.avatar; localStorage.setItem('of_avatar', d.avatar);
+    }
+
+    myProfile = { ...myProfile, bio, age: age ? Number(age) : '', gender, avatar: uavt };
+    document.getElementById('sb-bio').textContent = bio || 'Nischen Kontent Creator';
+    document.getElementById('edit-modal').classList.remove('open');
+    viewProfile(uname);
+    toast('✅ Profil gespeichert!');
+  } catch { toast('❌ Server nicht erreichbar'); }
 }
 
-/* SEARCH */
-let sTimer=null;
-function onSearch(){clearTimeout(sTimer);sTimer=setTimeout(doSearch,200);}
-function openDrop(){if(document.getElementById('search-inp').value.trim())document.getElementById('search-drop').classList.add('open');}
-function closeDrop(){document.getElementById('search-drop').classList.remove('open');}
-function doSearch(){
-  const q=document.getElementById('search-inp').value.trim().toLowerCase();
-  const drop=document.getElementById('search-drop');
-  if(!q){drop.classList.remove('open');return;}
-  const users=[...new Set(allPosts.map(p=>p.author))].filter(u=>u.toLowerCase().includes(q));
-  const posts=allPosts.filter(p=>p.caption&&p.caption.toLowerCase().includes(q));
-  let html='';
-  if(users.length){
-    html+=`<div class="sd-sec"><div class="sd-lbl">👤 Benutzer</div>`;
-    users.slice(0,4).forEach(u=>{
-      const cnt=allPosts.filter(p=>p.author===u).length;
-      html+=`<div class="sd-item" onclick="selectUser('${u}')"><img src="${getAv(u)}" alt=""><div class="sd-info"><div class="sd-name">@${esc(u)}</div><div class="sd-sub">${cnt} Nischen Kontent Post${cnt!==1?'s':''}</div></div></div>`;
-    });html+=`</div>`;
+/* ── SEARCH ────────────────────────────────────────────────────────────────── */
+let sTimer = null;
+function onSearch() { clearTimeout(sTimer); sTimer = setTimeout(doSearch, 200); }
+function openDrop() { if (document.getElementById('search-inp').value.trim()) document.getElementById('search-drop').classList.add('open'); }
+function closeDrop() { document.getElementById('search-drop').classList.remove('open'); }
+function doSearch() {
+  const q = document.getElementById('search-inp').value.trim().toLowerCase();
+  const drop = document.getElementById('search-drop');
+  if (!q) { drop.classList.remove('open'); return; }
+  const users  = [...new Set(allPosts.map(p => p.author))].filter(u => u.toLowerCase().includes(q));
+  const posts  = allPosts.filter(p => p.caption && p.caption.toLowerCase().includes(q));
+  let html = '';
+  if (users.length) {
+    html += `<div class="sd-sec"><div class="sd-lbl">👤 Benutzer</div>`;
+    users.slice(0, 4).forEach(u => {
+      const cnt = allPosts.filter(p => p.author === u).length;
+      html += `<div class="sd-item" onclick="selectUser('${u}')"><img src="${getAv(u)}" alt=""><div class="sd-info"><div class="sd-name">@${esc(u)}</div><div class="sd-sub">${cnt} Post${cnt !== 1 ? 's' : ''}</div></div></div>`;
+    }); html += `</div>`;
   }
-  if(posts.length){
-    html+=`<div class="sd-sec"><div class="sd-lbl">📝 Nischen Kontent</div>`;
-    posts.slice(0,4).forEach(p=>{
-      const cap=p.caption.length>48?p.caption.slice(0,48)+'…':p.caption;
-      html+=`<div class="sd-item" onclick="selectPost('${p.id}')"><img src="${getAv(p.author,p.avatar)}" alt=""><div class="sd-info"><div class="sd-name">${esc(cap)}</div><div class="sd-sub">@${esc(p.author)}</div></div></div>`;
-    });html+=`</div>`;
+  if (posts.length) {
+    html += `<div class="sd-sec"><div class="sd-lbl">📝 Nischen Kontent</div>`;
+    posts.slice(0, 4).forEach(p => {
+      const cap = p.caption.length > 48 ? p.caption.slice(0, 48) + '…' : p.caption;
+      html += `<div class="sd-item" onclick="selectPost('${p.id}')"><img src="${getAv(p.author, p.avatar)}" alt=""><div class="sd-info"><div class="sd-name">${esc(cap)}</div><div class="sd-sub">@${esc(p.author)}</div></div></div>`;
+    }); html += `</div>`;
   }
-  if(!html)html=`<div class="sd-empty">Kein Nischen Kontent gefunden für "${esc(q)}"</div>`;
-  drop.innerHTML=html;drop.classList.add('open');
+  if (!html) html = `<div class="sd-empty">Kein Nischen Kontent gefunden für "${esc(q)}"</div>`;
+  drop.innerHTML = html; drop.classList.add('open');
 }
-function selectUser(u){document.getElementById('search-inp').value='';closeDrop();viewProfile(u);}
-function selectPost(pid){document.getElementById('search-inp').value='';closeDrop();backToFeed();setTimeout(()=>{const el=document.getElementById('post-'+pid);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},120);}
+function selectUser(u) { document.getElementById('search-inp').value = ''; closeDrop(); viewProfile(u); }
+function selectPost(pid) {
+  document.getElementById('search-inp').value = ''; closeDrop(); backToFeed();
+  setTimeout(() => { const el = document.getElementById('post-' + pid); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120);
+}
 
-/* MOBILE */
-function openSheet(){document.getElementById('ms').style.display='flex';}
-function closeSheet(e){if(!e||e.target===document.getElementById('ms'))document.getElementById('ms').style.display='none';}
+/* ── MOBILE ────────────────────────────────────────────────────────────────── */
+function openSheet() { document.getElementById('ms').style.display = 'flex'; }
+function closeSheet(e) { if (!e || e.target === document.getElementById('ms')) document.getElementById('ms').style.display = 'none'; }
 
-/* TOAST */
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+/* ── TOAST ─────────────────────────────────────────────────────────────────── */
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 
-/* UTILS */
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function enc(s){return encodeURIComponent(String(s));}
-function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(f);});}
+/* ── UTILS ─────────────────────────────────────────────────────────────────── */
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function enc(s) { return encodeURIComponent(String(s)); }
+function fileToB64(f) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsDataURL(f); }); }
+
+/* ── NISCHEN LAUFBAND ──────────────────────────────────────────────────────── */
+(function(){
+  const n = ['Gaming','Kochen','Fitness','Musik','Tech','Mode','Travel','Kunst','Sport','Beauty','Film','DIY','Tiere','Natur','Humor','Wissenschaft','Fotografie','Anime','Handwerk','Küche'];
+  const sep = '<span class="nischen-sep"> ✦ </span>';
+  const items = n.map(x => `<span class="nischen-item">${x}</span>${sep}`).join('');
+  document.getElementById('nischen-track').innerHTML = items + items;
+})();
 </script>
 </body>
 </html>
